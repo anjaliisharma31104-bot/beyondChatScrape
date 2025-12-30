@@ -1,0 +1,5 @@
+Project: beyondChatScrape
+Progress so far:
+- Initialized git repository
+- Connected to GitHub
+- Configured user name and email
