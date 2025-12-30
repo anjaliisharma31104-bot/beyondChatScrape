@@ -6,45 +6,6 @@ This project is a full-stack application designed to automate the process of scr
 
 The following diagram illustrates the flow of data and the interaction between the different components of the system.
 
-```mermaid
-graph TD;
-    subgraph User
-        A[Browser]
-    end
-
-    subgraph Vercel
-        B[React Frontend]
-    end
-
-    subgraph GitHub Actions
-        C[Scheduler (cron)]
-        D[Scraper Script: scrape.js]
-        E[Rewriter Script: rewrite.js]
-    end
-
-    subgraph Render
-        F[Laravel Backend API]
-        G[PostgreSQL Database]
-    end
-
-    subgraph External Services
-        H[BeyondChats Blog]
-        I[Google Search]
-        J[Gemini API]
-    end
-
-    A --> B;
-    B --> F;
-    C --> D;
-    D --> H;
-    D --> F;
-    C --> E;
-    E --> F;
-    E --> I;
-    E --> J;
-    F --> G;
-```
-
 ## Local Setup Instructions
 
 To run this project locally, you will need to have PHP, Composer, and Node.js installed on your machine.
