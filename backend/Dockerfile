@@ -1,36 +1,32 @@
-# Use an official PHP runtime as a parent image
-FROM php:8.4-fpm
+FROM php:8.4-apache
 
 # Set working directory
-WORKDIR /var/www
+WORKDIR /var/www/html
 
-# Install system dependencies
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
     unzip \
     libzip-dev \
-    libpq-dev
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip
 
-# Install PHP extensions required by Laravel
-RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Copy existing application directory contents
+# Copy application files
 COPY . .
 
-# Copy existing application directory permissions
-RUN chown -R www-data:www-data storage bootstrap/cache
-
-# Install composer dependencies
+# Install Composer dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Expose port 9000 and start php-fpm server
-EXPOSE 9000
-CMD ["php-fpm"]
+# Set permissions for Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Configure Apache to point to Laravel's public directory
+RUN a2enmod rewrite
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Expose port 80 for Apache
+EXPOSE 80
