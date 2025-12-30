@@ -17,6 +17,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Copy application files
 COPY . .
 
+# Clear any cached config before installing dependencies
+RUN php artisan config:clear
+
 # Install Composer dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
