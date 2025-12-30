@@ -10,7 +10,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function searchGoogleAndGetLinks(query) {
   console.log(`Searching Google for: "${query}"`);
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
   const page = await browser.newPage();
   await page.goto(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
 

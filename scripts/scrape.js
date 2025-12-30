@@ -7,7 +7,10 @@ const API_ENDPOINT = 'http://localhost:8000/api/articles';
 
 async function scrapeAndSaveArticles() {
   console.log('Launching browser...');
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
   const page = await browser.newPage();
 
   console.log(`Navigating to ${blogListUrl} to find the last page...`);

@@ -1,5 +1,16 @@
 Project: beyondChatScrape
 Progress so far:
-- Initialized git repository
-- Connected to GitHub
-- Configured user name and email
+- Initialized git repository and connected to GitHub.
+- Set up the complete project structure with a Laravel backend, Node.js scripts, and a React frontend.
+- Implemented the backend CRUD API for articles.
+- Switched the AI rewriting logic from OpenAI to the Google Gemini API.
+- Developed the scraper script to find and extract article content from the last page of the blog.
+- Developed the rewriter script to use Google Search for references and enrich the AI prompt.
+- Created a GitHub Actions workflow to automate the scraping and rewriting tasks.
+- Created a comprehensive README.md with local setup instructions and an architecture diagram.
+- Deployed the backend to Render and the frontend to Vercel.
+
+Current Problem:
+- The live frontend at `https://beyond-chat-scrape.vercel.app/` is unable to fetch data from the live backend at `https://beyondchat-backend-094a.onrender.com`.
+- The backend is consistently returning a `500 Internal Server Error`, which indicates a crash in the Laravel application itself.
+- The root cause is likely a misconfiguration in the production environment, probably related to the database connection or file permissions on the live server. We are actively diagnosing this.
