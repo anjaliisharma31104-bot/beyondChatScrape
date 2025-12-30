@@ -17,11 +17,11 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Copy application files
 COPY . .
 
-# Clear any cached config before installing dependencies
-RUN php artisan config:clear
-
 # Install Composer dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# Clear any cached config after installing dependencies
+RUN php artisan config:clear
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
