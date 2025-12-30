@@ -65,33 +65,52 @@ async function rewriteArticles() {
         console.log(`Processing article: "${article.title}"`);
         
         const referenceLinks = await searchGoogleAndGetLinks(article.title);
-        if (referenceLinks.length === 0) {
-          console.log('Could not find any reference links. Skipping rewrite for this article.');
-          continue;
+        let prompt;
+        let finalContentModifier = (content) => content;
+
+        if (referenceLinks.length > 0) {
+          console.log(`Found reference links: ${referenceLinks.join(', ')}`);
+
+          let referenceContents = '';
+          for (const link of referenceLinks) {
+            const content = await scrapeReferenceArticle(link);
+            referenceContents += `\n\n--- Reference from ${link} ---\n${content}`;
+          }
+
+          prompt = `
+            Please rewrite the following article with a professional and engaging tone.
+            Use the provided reference articles to update the content and formatting to match what is currently ranking on Google.
+            At the end of the article, you MUST cite the references under a "References:" heading.
+
+            Original Article:
+            ---
+            ${article.original_content}
+            ---
+
+            Reference Articles:
+            ---
+            ${referenceContents}
+            ---
+          `;
+          
+          finalContentModifier = (content) => {
+            if (!content.includes('References:')) {
+              return content + `\n\nReferences:\n${referenceLinks.join('\n')}`;
+            }
+            return content;
+          };
+
+        } else {
+          console.log('Could not find any reference links. Rewriting without external references.');
+          prompt = `
+            Please rewrite the following article with a professional and engaging tone.
+
+            Original Article:
+            ---
+            ${article.original_content}
+            ---
+          `;
         }
-        console.log(`Found reference links: ${referenceLinks.join(', ')}`);
-
-        let referenceContents = '';
-        for (const link of referenceLinks) {
-          const content = await scrapeReferenceArticle(link);
-          referenceContents += `\n\n--- Reference from ${link} ---\n${content}`;
-        }
-
-        const prompt = `
-          Please rewrite the following article with a professional and engaging tone.
-          Use the provided reference articles to update the content and formatting to match what is currently ranking on Google.
-          At the end of the article, you MUST cite the references under a "References:" heading.
-
-          Original Article:
-          ---
-          ${article.original_content}
-          ---
-
-          Reference Articles:
-          ---
-          ${referenceContents}
-          ---
-        `;
 
         console.log('Calling Gemini to rewrite...');
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -100,10 +119,7 @@ async function rewriteArticles() {
         const rewrittenContent = geminiResponse.text();
 
         if (rewrittenContent) {
-          let finalContent = rewrittenContent;
-          if (!finalContent.includes('References:')) {
-            finalContent += `\n\nReferences:\n${referenceLinks.join('\n')}`;
-          }
+          const finalContent = finalContentModifier(rewrittenContent);
 
           console.log(`Updating article in the database: "${article.title}"`);
           const updateResponse = await fetch(`${API_ENDPOINT}/${article.id}`, {
