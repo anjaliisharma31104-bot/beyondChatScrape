@@ -21,10 +21,6 @@ jobs:
         working-directory: ./scripts
         run: npm install
 
-      - name: Install Puppeteer Browsers
-        working-directory: ./scripts
-        run: npx puppeteer browsers install chrome
-
       - name: Run scraper
         working-directory: ./scripts
         run: node scrape.js
@@ -47,13 +43,11 @@ jobs:
         working-directory: ./scripts
         run: npm install
 
-      - name: Install Puppeteer Browsers
-        working-directory: ./scripts
-        run: npx puppeteer browsers install chrome
-
       - name: Run rewriter
         working-directory: ./scripts
         run: node rewrite.js
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          SEARCH_ENGINE_ID: ${{ secrets.SEARCH_ENGINE_ID }}
           API_ENDPOINT: ${{ secrets.API_ENDPOINT }}

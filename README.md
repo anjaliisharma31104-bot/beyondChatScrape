@@ -89,11 +89,13 @@ npm install
 cp .env.example .env
 ```
 
-Before running the scripts, you need to add your Gemini API key to the `.env` file:
+Before running the scripts, you need to add your API keys and IDs to the `.env` file:
 
 **scripts/.env**
 ```
 GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+SEARCH_ENGINE_ID=your_search_engine_id_here
 API_ENDPOINT=http://localhost:8000/api/articles
 ```
 

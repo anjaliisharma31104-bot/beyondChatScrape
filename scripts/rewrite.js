@@ -1,33 +1,31 @@
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
 
 const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:8000/api/articles';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const SEARCH_ENGINE_ID = process.env.SEARCH_ENGINE_ID;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function searchGoogleAndGetLinks(query) {
   console.log(`Searching Google for: "${query}"`);
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-  const page = await browser.newPage();
-  await page.goto(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
-
-  const links = await page.evaluate(() => {
-    const results = [];
-    document.querySelectorAll('div.yuRUbf a').forEach(anchor => {
-      if (anchor.href && !anchor.href.includes('google.com')) {
-        results.push(anchor.href);
-      }
-    });
-    return results;
-  });
-
-  await browser.close();
-  return links.slice(0, 2);
+  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Google Search API responded with status ${response.status}`);
+    }
+    const data = await response.json();
+    if (!data.items) {
+      return [];
+    }
+    return data.items.slice(0, 2).map(item => item.link);
+  } catch (error) {
+    console.error('Failed to get links from Google Search API:', error.message);
+    return [];
+  }
 }
 
 async function scrapeReferenceArticle(url) {
