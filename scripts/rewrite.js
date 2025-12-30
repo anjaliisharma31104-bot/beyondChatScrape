@@ -18,7 +18,7 @@ async function searchGoogleAndGetLinks(query) {
 
   const links = await page.evaluate(() => {
     const results = [];
-    document.querySelectorAll('div.g a').forEach(anchor => {
+    document.querySelectorAll('div.yuRUbf a').forEach(anchor => {
       if (anchor.href && !anchor.href.includes('google.com')) {
         results.push(anchor.href);
       }
