@@ -61,7 +61,15 @@ async function scrapeAndSaveArticles() {
         console.log(`Could not extract title or content from ${link}`);
       }
     } catch (error) {
-      console.error(`Failed to process article from ${link}:`, error.message);
+      console.error(`Failed to process article from ${link}:`);
+      if (error.response) {
+        console.error('Data:', error.response.data);
+        console.error('Status:', error.response.status);
+      } else if (error.request) {
+        console.error('Request:', error.request);
+      } else {
+        console.error('Error', error.message);
+      }
     }
   }
 

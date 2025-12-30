@@ -110,11 +110,27 @@ async function rewriteArticles() {
           console.log(`Could not generate rewritten content for: "${article.title}"`);
         }
       } catch (error) {
-        console.error(`Failed to process article "${article.title}":`, error.message);
+        console.error(`Failed to process article "${article.title}":`);
+        if (error.response) {
+          console.error('Data:', error.response.data);
+          console.error('Status:', error.response.status);
+        } else if (error.request) {
+          console.error('Request:', error.request);
+        } else {
+          console.error('Error', error.message);
+        }
       }
     }
   } catch (error) {
-    console.error('Failed to fetch articles from the API:', error.message);
+    console.error('Failed to fetch articles from the API:');
+    if (error.response) {
+      console.error('Data:', error.response.data);
+      console.error('Status:', error.response.status);
+    } else if (error.request) {
+      console.error('Request:', error.request);
+    } else {
+      console.error('Error', error.message);
+    }
   }
 }
 
