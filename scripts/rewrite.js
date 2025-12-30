@@ -1,5 +1,4 @@
 require('dotenv').config();
-const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
@@ -28,13 +27,17 @@ async function searchGoogleAndGetLinks(query) {
   });
 
   await browser.close();
-  return links.slice(0, 2); // Return top 2 links
+  return links.slice(0, 2);
 }
 
 async function scrapeReferenceArticle(url) {
   try {
-    const { data } = await axios.get(url, { timeout: 15000 });
-    const $ = cheerio.load(data);
+    const response = await fetch(url, { timeout: 15000 });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url} with status ${response.status}`);
+    }
+    const html = await response.text();
+    const $ = cheerio.load(html);
     const content = $('article').text() || $('main').text() || $('body').text();
     return content.replace(/\s\s+/g, ' ').trim().slice(0, 2000);
   } catch (error) {
@@ -46,8 +49,11 @@ async function scrapeReferenceArticle(url) {
 async function rewriteArticles() {
   try {
     console.log('Fetching articles from the API...');
-    const response = await axios.get(API_ENDPOINT);
-    const articlesToRewrite = response.data.filter(article => !article.rewritten_content);
+    const response = await fetch(API_ENDPOINT);
+    if (!response.ok) {
+      throw new Error(`API responded with status ${response.status}`);
+    }
+    const articlesToRewrite = (await response.json()).filter(article => !article.rewritten_content);
 
     if (articlesToRewrite.length === 0) {
       console.log('No articles to rewrite.');
@@ -102,35 +108,32 @@ async function rewriteArticles() {
           }
 
           console.log(`Updating article in the database: "${article.title}"`);
-          await axios.put(`${API_ENDPOINT}/${article.id}`, {
-            rewritten_content: finalContent,
+          const updateResponse = await fetch(`${API_ENDPOINT}/${article.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              rewritten_content: finalContent,
+            }),
           });
+
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse.text();
+            throw new Error(`API responded with status ${updateResponse.status}: ${errorData}`);
+          }
+
           console.log(`Successfully updated: "${article.title}"`);
         } else {
           console.log(`Could not generate rewritten content for: "${article.title}"`);
         }
       } catch (error) {
-        console.error(`Failed to process article "${article.title}":`);
-        if (error.response) {
-          console.error('Data:', error.response.data);
-          console.error('Status:', error.response.status);
-        } else if (error.request) {
-          console.error('Request:', error.request);
-        } else {
-          console.error('Error', error.message);
-        }
+        console.error(`Failed to process article "${article.title}":`, error.message);
       }
     }
   } catch (error) {
-    console.error('Failed to fetch articles from the API:');
-    if (error.response) {
-      console.error('Data:', error.response.data);
-      console.error('Status:', error.response.status);
-    } else if (error.request) {
-      console.error('Request:', error.request);
-    } else {
-      console.error('Error', error.message);
-    }
+    console.error('Failed to fetch articles from the API:', error.message);
   }
 }
 

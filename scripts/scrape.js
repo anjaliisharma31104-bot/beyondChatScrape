@@ -1,9 +1,7 @@
 const puppeteer = require('puppeteer');
-const axios = require('axios');
 
 const blogListUrl = 'https://beyondchats.com/blogs/';
-// This is a placeholder and will be replaced with our live backend URL later.
-const API_ENDPOINT = 'http://localhost:8000/api/articles'; 
+const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:8000/api/articles'; 
 
 async function scrapeAndSaveArticles() {
   console.log('Launching browser...');
@@ -42,7 +40,7 @@ async function scrapeAndSaveArticles() {
   for (const link of articleLinks) {
     try {
       console.log(`Scraping content from ${link}...`);
-      await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 60000 }); // Increased timeout
+      await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
       const article = await page.evaluate(() => {
         const title = document.querySelector('h1.elementor-heading-title')?.innerText;
@@ -51,25 +49,32 @@ async function scrapeAndSaveArticles() {
       });
 
       if (article.title && article.content) {
-        console.log(`Successfully scraped: "${article.title}"`);
-        await axios.post(API_ENDPOINT, {
-          title: article.title,
-          original_content: article.content,
+        console.log(`Saving article: "${article.title}"`);
+        
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            title: article.title,
+            original_content: article.content,
+          }),
         });
-        console.log(`Successfully saved article: "${article.title}"`);
+
+        if (!response.ok) {
+          const errorData = await response.text();
+          throw new Error(`API responded with status ${response.status}: ${errorData}`);
+        }
+
+        const responseData = await response.json();
+        console.log(`Successfully saved article: "${responseData.title}"`);
       } else {
         console.log(`Could not extract title or content from ${link}`);
       }
     } catch (error) {
-      console.error(`Failed to process article from ${link}:`);
-      if (error.response) {
-        console.error('Data:', error.response.data);
-        console.error('Status:', error.response.status);
-      } else if (error.request) {
-        console.error('Request:', error.request);
-      } else {
-        console.error('Error', error.message);
-      }
+      console.error(`Failed to process article from ${link}:`, error.message);
     }
   }
 
