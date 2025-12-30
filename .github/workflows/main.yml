@@ -21,6 +21,10 @@ jobs:
         working-directory: ./scripts
         run: npm install
 
+      - name: Install Puppeteer Browsers
+        working-directory: ./scripts
+        run: npx puppeteer browsers install chrome
+
       - name: Run scraper
         working-directory: ./scripts
         run: node scrape.js
