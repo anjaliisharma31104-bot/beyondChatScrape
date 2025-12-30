@@ -6,8 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  scrape:
+  scrape_and_rewrite:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/puppeteer/puppeteer:22.12.1
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -16,42 +19,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'scripts/package-lock.json'
 
       - name: Install dependencies
         working-directory: ./scripts
         run: npm install
 
-      - name: Install Puppeteer Browsers
-        working-directory: ./scripts
-        run: npx puppeteer browsers install chrome
-
-      - name: Run scraper
+      - name: Run Scraper
         working-directory: ./scripts
         run: node scrape.js
         env:
           API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
 
-  rewrite:
-    needs: scrape
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        working-directory: ./scripts
-        run: npm install
-
-      - name: Install Puppeteer Browsers
-        working-directory: ./scripts
-        run: npx puppeteer browsers install chrome
-
-      - name: Run rewriter
+      - name: Run Rewriter
         working-directory: ./scripts
         run: node rewrite.js
         env:
