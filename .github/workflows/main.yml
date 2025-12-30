@@ -2,15 +2,12 @@ name: Scrape and Rewrite Articles
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs every day at midnight UTC
-  workflow_dispatch: # Allows manual triggering from the GitHub UI
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./scripts
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -21,12 +18,15 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
+        working-directory: ./scripts
         run: npm install
 
       - name: Install Puppeteer Browsers
+        working-directory: ./scripts
         run: npx puppeteer browsers install chrome
 
       - name: Run scraper
+        working-directory: ./scripts
         run: node scrape.js
         env:
           API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
@@ -34,9 +34,6 @@ jobs:
   rewrite:
     needs: scrape
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./scripts
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -47,12 +44,15 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
+        working-directory: ./scripts
         run: npm install
 
       - name: Install Puppeteer Browsers
+        working-directory: ./scripts
         run: npx puppeteer browsers install chrome
 
       - name: Run rewriter
+        working-directory: ./scripts
         run: node rewrite.js
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
