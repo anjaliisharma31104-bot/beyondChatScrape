@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import './App.css';
 
 function App() {
@@ -10,10 +9,13 @@ function App() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        // This will be replaced with our live Render URL in the Vercel environment variables.
         const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api/articles';
-        const response = await axios.get(apiUrl);
-        setArticles(response.data);
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setArticles(data);
       } catch (err) {
         setError('Failed to fetch articles. Make sure the backend server is running and accessible.');
         console.error(err);
@@ -28,10 +30,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>BeyondChats Article Automation</h1>
+        <h1>BeyondChats Article Dashboard</h1>
       </header>
       <main>
-        {loading && <p>Loading articles...</p>}
+        {loading && <div className="loading-spinner"></div>}
         {error && <p className="error">{error}</p>}
         <div className="article-list">
           {articles.length > 0 ? (
@@ -53,7 +55,7 @@ function App() {
               </div>
             ))
           ) : (
-            !loading && !error && <p>No articles found.</p>
+            !loading && !error && <p>No articles found. Please run the "Scrape and Rewrite Articles" workflow in your project's Actions tab on GitHub to populate the database.</p>
           )}
         </div>
       </main>
