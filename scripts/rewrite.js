@@ -1,14 +1,12 @@
 require('dotenv').config();
 const axios = require('axios');
-const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const puppeteer = require('puppeteer');
 const cheerio = require('cheerio');
 
 const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:8000/api/articles';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function searchGoogleAndGetLinks(query) {
   console.log(`Searching Google for: "${query}"`);
@@ -18,7 +16,6 @@ async function searchGoogleAndGetLinks(query) {
 
   const links = await page.evaluate(() => {
     const results = [];
-    // This selector targets the main search result links.
     document.querySelectorAll('div.g a').forEach(anchor => {
       if (anchor.href && !anchor.href.includes('google.com')) {
         results.push(anchor.href);
@@ -35,9 +32,7 @@ async function scrapeReferenceArticle(url) {
   try {
     const { data } = await axios.get(url, { timeout: 15000 });
     const $ = cheerio.load(data);
-    // A "best effort" to get the main content by targeting common article tags.
     const content = $('article').text() || $('main').text() || $('body').text();
-    // Clean up the text and limit its size to avoid overly long prompts.
     return content.replace(/\s\s+/g, ' ').trim().slice(0, 2000);
   } catch (error) {
     console.error(`Failed to scrape reference article ${url}: ${error.message}`);
@@ -91,26 +86,21 @@ async function rewriteArticles() {
           ---
         `;
 
-        console.log('Calling LLM to rewrite...');
-        const completion = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            { role: 'system', content: 'You are an expert content writer and SEO specialist.' },
-            { role: 'user', content: prompt }
-          ],
-        });
-
-        let rewrittenContent = completion.choices[0].message.content;
+        console.log('Calling Gemini to rewrite...');
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const result = await model.generateContent(prompt);
+        const geminiResponse = await result.response;
+        const rewrittenContent = geminiResponse.text();
 
         if (rewrittenContent) {
-          // Ensure references are included
-          if (!rewrittenContent.includes('References:')) {
-            rewrittenContent += `\n\nReferences:\n${referenceLinks.join('\n')}`;
+          let finalContent = rewrittenContent;
+          if (!finalContent.includes('References:')) {
+            finalContent += `\n\nReferences:\n${referenceLinks.join('\n')}`;
           }
 
           console.log(`Updating article in the database: "${article.title}"`);
           await axios.put(`${API_ENDPOINT}/${article.id}`, {
-            rewritten_content: rewrittenContent,
+            rewritten_content: finalContent,
           });
           console.log(`Successfully updated: "${article.title}"`);
         } else {

@@ -30,7 +30,7 @@ graph TD;
     subgraph External Services
         H[BeyondChats Blog]
         I[Google Search]
-        J[OpenAI API]
+        J[Gemini API]
     end
 
     A --> B;
@@ -89,12 +89,12 @@ npm install
 cp .env.example .env
 ```
 
-Before running the scripts, you need to add your OpenAI API key to the `.env` file:
+Before running the scripts, you need to add your Gemini API key to the `.env` file:
 
 **scripts/.env**
 ```
-OPENAI_API_KEY=your_openai_api_key_here
-API_ENDPOINT=http://127.0.0.1:8000/api/articles
+GEMINI_API_KEY=your_gemini_api_key_here
+API_ENDPOINT=http://localhost:8000/api/articles
 ```
 
 **To run the scripts:**
