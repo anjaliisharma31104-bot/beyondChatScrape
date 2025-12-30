@@ -78,16 +78,21 @@ async function rewriteArticles() {
           }
 
           prompt = `
-            Please rewrite the following article with a professional and engaging tone.
-            Use the provided reference articles to update the content and formatting to match what is currently ranking on Google.
-            At the end of the article, you MUST cite the references under a "References:" heading.
+            You are an expert content writer and SEO specialist working for a major tech media company. Your task is to rewrite a draft article to make it more professional, engaging, and ready for publication.
 
-            Original Article:
+            **Instructions:**
+
+            1.  **Adopt a Professional Tone:** The writing style should be clear, concise, and authoritative, suitable for a tech-savvy audience.
+            2.  **Enhance and Update:** Integrate insights and information from the "Reference Articles" provided below to enrich the original content. Ensure the rewritten article is up-to-date and provides deeper value than the original.
+            3.  **Structure and Formatting:** Improve the article's structure. Use clear headings, subheadings, and bullet points where appropriate to improve readability. The final output should be well-organized.
+            4.  **Cite Your Sources:** At the very end of the rewritten article, you MUST include a "References:" heading, listing the URLs of the reference articles you used.
+
+            **Original Article:**
             ---
             ${article.original_content}
             ---
 
-            Reference Articles:
+            **Reference Articles:**
             ---
             ${referenceContents}
             ---
